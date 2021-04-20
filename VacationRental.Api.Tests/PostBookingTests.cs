@@ -68,6 +68,7 @@ namespace VacationRental.Api.Tests
         /// </summary>
         /// <returns></returns>
         [Fact(Skip = "Just work if run alone")]
+        //[Fact]
         public async Task GivenCompleteRequest_WhenPostBooking_ThenAGetReturnsTheCreatedBooking_SecondCondition()
         {
             var postRentalRequest = new RentalBindingModel

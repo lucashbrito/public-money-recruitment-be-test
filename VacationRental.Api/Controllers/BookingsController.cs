@@ -36,33 +36,34 @@ namespace VacationRental.Api.Controllers
         }
 
         [HttpPost]
-        public ActionResult<ResourceIdViewModel> Post(BookingBindingModel model)
+        public ActionResult<ResourceIdViewModel> Post(BookingBindingModel newBooking)
         {
-            if (model.Nights <= 0)
+            if (newBooking.Nights <= 0)
                 return BadRequest("Nigts must be positive");
-            if (!_rentals.ContainsKey(model.RentalId))
-                return NotFound();
+            if (!_rentals.ContainsKey(newBooking.RentalId))
+                return NotFound();            
 
-            for (var i = 0; i < model.Nights; i++)
+            var reservationForThatTime = 0;
+            foreach (var booking in _bookings.Values)
             {
-                var count = 0;
-                foreach (var booking in _bookings.Values)
-                {
-                    if (booking.IsRentalEqual(model.RentalId)
-                        && (booking.IsStartDayEqualOrDayAfterThanNewStart(model.Start.Date) && booking.IsEndDayGreaterThanNewStartDay(model.Start.Date))
-                        || (booking.IsNewEndDayGreaterThanStartDay(model.Start, model.Nights) && booking.IsEndDayGreatOrEqualNewEndDay(model.Start, model.Nights))
-                        || (booking.IsStartDayGreaterThanNewStartDay(model.Start) && booking.IsNewEndDayGreaterThanEndDay(model.Start, model.Nights)))
-                    {
-                        count++;
-                    }
-                }
+                if (booking.IsRentalEqual(newBooking.RentalId)
+                    && (booking.IsNewStartDayAfterPrepartionTime(newBooking.Start.Date, _rentals[booking.RentalId].PreprationTimeInDays)
+                        && booking.IsEndDayGreaterThanNewStartDay(newBooking.Start.Date))
 
-                _rentals[model.RentalId].IsRentalAvailable(count);
+                    || (booking.IsNewEndDayGreaterThanStartDay(newBooking.Start, newBooking.Nights, _rentals[booking.RentalId].PreprationTimeInDays)
+                        && booking.IsEndDayGreatOrEqualNewEndDay(newBooking.Start, newBooking.Nights))
+
+                    || (booking.IsStartDayGreaterThanNewStartDay(newBooking.Start, _rentals[booking.RentalId].PreprationTimeInDays)
+                        && booking.IsNewEndDayGreaterThanEndDay(newBooking.Start, newBooking.Nights)))
+                {
+                    reservationForThatTime++;
+                }
             }
+            _rentals[newBooking.RentalId].IsRentalAvailable(reservationForThatTime);
 
             var key = new ResourceIdViewModel { Id = _bookings.Keys.Count + 1 };
 
-            _bookings.Add(key.Id, Booking.Create(key.Id, model.RentalId, model.Start.Date, model.Nights));
+            _bookings.Add(key.Id, Booking.Create(key.Id, newBooking.RentalId, newBooking.Start.Date, newBooking.Nights));
 
             return Ok(key);
         }

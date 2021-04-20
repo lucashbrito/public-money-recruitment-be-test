@@ -36,7 +36,7 @@ namespace VacationRental.Domain
 
         public void IsRentalAvailable(int count)
         {
-            if (count >= Units + PreprationTimeInDays)
+            if (count >= Units)
             {
                 throw new DomainException("Rental is not available");
             }

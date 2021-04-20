@@ -58,15 +58,20 @@ namespace VacationRental.Domain
             return Start <= date;
         }
 
+        public bool IsNewStartDayAfterPrepartionTime(DateTime date, int prepartionDate)
+        {
+            return (Start.AddDays(prepartionDate)) < date;
+        }
+
         public bool IsEndDayGreaterThanNewStartDay(DateTime newDate)
         {
             return Start.AddDays(Nights) > newDate;
         }
 
-        public bool IsNewEndDayGreaterThanStartDay(DateTime newData, int nights)
+        public bool IsNewEndDayGreaterThanStartDay(DateTime newData, int nights, int prepartionDate)
         {
             var endDate = newData.AddDays(nights);
-            return Start < endDate;
+            return Start.AddDays(prepartionDate) < endDate;
         }
 
         public bool IsEndDayGreatOrEqualNewEndDay(DateTime newData, int nights)
@@ -75,10 +80,10 @@ namespace VacationRental.Domain
 
             return Start.AddDays(Nights) >= endDate;
         }
-
-        public bool IsStartDayGreaterThanNewStartDay(DateTime newDate)
+      
+        public bool IsStartDayGreaterThanNewStartDay(DateTime newDate, int prepartionDate)
         {
-            return Start > newDate;
+            return Start.AddDays(prepartionDate) > newDate;
         }
 
         public bool IsNewEndDayGreaterThanEndDay(DateTime newDate, int nights)
