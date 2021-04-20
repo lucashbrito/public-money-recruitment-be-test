@@ -14,7 +14,7 @@ namespace VacationRental.Api.Tests
     [Collection("Integration")]
     public class PostBookingTests
     {
-        private readonly HttpClient _client;
+        private HttpClient _client;
 
         public PostBookingTests(IntegrationFixture fixture)
         {
@@ -46,10 +46,10 @@ namespace VacationRental.Api.Tests
             await RequestFailed(postRentalRequest, postBookingRequest1);
         }
 
-
         [Fact]
         public async Task GivenCompleteRequest_WhenPostBooking_ThenAGetReturnsTheCreatedBooking()
         {
+            _client = new IntegrationFixture().Client;
             var postRentalRequest = new RentalBindingModel
             {
                 Units = 4
@@ -60,17 +60,13 @@ namespace VacationRental.Api.Tests
                 Start = new DateTime(2001, 01, 01)
             };
 
-            await RequestSuccessed(postRentalRequest, postBookingRequest1);          
+            await RequestSuccessed(postRentalRequest, postBookingRequest1);
         }
 
-        /// <summary>
-        /// This test just pass if run alone.
-        /// </summary>
-        /// <returns></returns>
-        [Fact(Skip = "Just work if run alone")]
-        //[Fact]
+        [Fact]
         public async Task GivenCompleteRequest_WhenPostBooking_ThenAGetReturnsTheCreatedBooking_SecondCondition()
         {
+            _client = new IntegrationFixture().Client;
             var postRentalRequest = new RentalBindingModel
             {
                 Units = 2
@@ -94,13 +90,10 @@ namespace VacationRental.Api.Tests
             await RequestSuccessed(postRentalRequest, postBookingRequest2);
         }
 
-        /// <summary>
-        /// This test just pass if run alone.
-        /// </summary>
-        /// <returns></returns>
-        [Fact(Skip = "Just work if run alone")]
+        [Fact]
         public async Task GivenCompleteRequest_WhenPostBooking_ThenAPostReturnsErrorWhenThereIsOverbooking_ThirdCondition()
         {
+            _client = new IntegrationFixture().Client;
             var postRentalRequest = new RentalBindingModel
             {
                 Units = 2
@@ -176,20 +169,10 @@ namespace VacationRental.Api.Tests
 
             postBookingRequest.RentalId = postRentalResult.Id;
 
-            ResourceIdViewModel postBookingResult;
             using (var postBookingResponse = await _client.PostAsJsonAsync($"/api/v1/bookings", postBookingRequest))
             {
-                Assert.True(postBookingResponse.IsSuccessStatusCode);
-                postBookingResult = await postBookingResponse.Content.ReadAsAsync<ResourceIdViewModel>();
-            }
-
-            using (var postBookingResponse = await _client.PostAsJsonAsync($"/api/v1/bookings", postBookingResult))
-            {
-                var errorDetails = await postBookingResponse.Content.ReadAsAsync<ErrorDetails>();
                 Assert.False(postBookingResponse.IsSuccessStatusCode);
-                Assert.Equal("Bad Request", postBookingResponse.ReasonPhrase);
-            };
+            }
         }
-
     }
 }

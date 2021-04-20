@@ -11,7 +11,7 @@ namespace VacationRental.Api.Tests
     [Collection("Integration")]
     public class VacationRentalTests
     {
-        private readonly HttpClient _client;
+        private HttpClient _client;
         public VacationRentalTests(IntegrationFixture fixture)
         {
             _client = fixture.Client;
@@ -20,6 +20,8 @@ namespace VacationRental.Api.Tests
         [Fact]
         public async Task GivenCompleteRequest_WhenPostVacationRental_ThenAGetReturnsTheCreatedRental()
         {
+            _client = new IntegrationFixture().Client;
+
             var postRentalRequest = new VacationRentalBindingModel
             {
                 Units = 2,
@@ -96,6 +98,8 @@ namespace VacationRental.Api.Tests
         [Fact]
         public async Task GivenCompleteRequest_WhenPostBooking()
         {
+            _client = new IntegrationFixture().Client;
+
             #region First Send
             var postRentalRequest = new VacationRentalBindingModel
             {
@@ -204,6 +208,8 @@ namespace VacationRental.Api.Tests
         [Fact]
         public async Task GivenCompleteRequest_WhenPostBooking_ThenAPostReturnsErrorWhenThereIsOverbooking()
         {
+            _client = new IntegrationFixture().Client;
+
             await GivenCompleteRequest_WhenPostBooking();
 
             #region Second Send
@@ -213,7 +219,7 @@ namespace VacationRental.Api.Tests
                 Nights = 2,
                 Start = new DateTime(2002, 01, 02)
             };
-            
+
             using (var postBookingResponse = await _client.PostAsJsonAsync($"/api/v1/bookings", postBookingRequest2))
             {
                 Assert.False(postBookingResponse.IsSuccessStatusCode);
