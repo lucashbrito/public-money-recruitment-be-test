@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using VacationRental.Api.Models;
+using VacationRental.Domain;
 using Xunit;
 
 namespace VacationRental.Api.Tests
@@ -36,7 +37,7 @@ namespace VacationRental.Api.Tests
             {
                 Assert.True(getResponse.IsSuccessStatusCode);
 
-                var getResult = await getResponse.Content.ReadAsAsync<RentalViewModel>();
+                var getResult = await getResponse.Content.ReadAsAsync<RentalDto>();
                 Assert.Equal(request.Units, getResult.Units);
             }
         }
