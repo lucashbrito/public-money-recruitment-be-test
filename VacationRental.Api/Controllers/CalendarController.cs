@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using VacationRental.Api.Models;
+using VacationRental.Api.Services;
 using VacationRental.Domain;
 using VacationRental.Domain.DomainObjects;
 using VacationRental.Domain.ValueObject;
@@ -14,15 +15,13 @@ namespace VacationRental.Api.Controllers
     public class CalendarController : ControllerBase
     {
         private readonly IDictionary<int, Rental> _rentals;
-        private readonly IDictionary<int, Booking> _bookings;
+        private readonly ICalendarServices _calendarService;
         private readonly IMapper _mapper;
-        public CalendarController(
-            IDictionary<int, Rental> rentals,
-            IDictionary<int, Booking> bookings,
-            IMapper mapper)
+
+        public CalendarController(IDictionary<int, Rental> rentals, IMapper mapper, ICalendarServices calendarService)
         {
             _rentals = rentals;
-            _bookings = bookings;
+            _calendarService = calendarService;
             _mapper = mapper;
         }
 
@@ -34,16 +33,7 @@ namespace VacationRental.Api.Controllers
             if (!_rentals.ContainsKey(rentalId))
                 return NotFound();
 
-            var result = Calendar.Create(rentalId);
-
-            for (var night = 0; night < nights; night++)
-            {
-                var date = CalendarDate.Create(start, night);
-
-                date.AddCalendarBooking(rentalId, _bookings.Values);
-
-                result.Dates.Add(date);
-            }           
+            var result = _calendarService.Get(rentalId, start, nights);
 
             return Ok(_mapper.Map<CalendarDto>(result));
         }

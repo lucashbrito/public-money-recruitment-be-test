@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using VacationRental.Api.Models;
+using VacationRental.Api.Services;
 using VacationRental.Domain;
 using VacationRental.Domain.ValueObject;
 
@@ -14,18 +15,20 @@ namespace VacationRental.Api.Controllers
     [ApiController]
     public class VacationRentalController : ControllerBase
     {
-
         private readonly IDictionary<int, Rental> _rentals;
-        private readonly IDictionary<int, Booking> _bookings;
         private readonly IMapper _mapper;
-        public VacationRentalController(
-            IDictionary<int, Rental> rentals,
-            IDictionary<int, Booking> bookings,
-            IMapper mapper)
+        private readonly IRentalServices _rentalServices;
+        private readonly ICalendarServices _calendarService;
+
+        public VacationRentalController(IDictionary<int, Rental> rentals,
+            IMapper mapper,
+            IRentalServices rentalServices,
+            ICalendarServices calendarService)
         {
+            _rentalServices = rentalServices;
             _rentals = rentals;
-            _bookings = bookings;
             _mapper = mapper;
+            _calendarService = calendarService;
         }
 
         [HttpPost]
@@ -45,15 +48,10 @@ namespace VacationRental.Api.Controllers
             if (!_rentals.ContainsKey(id))
                 return NotFound();
 
-            foreach (var rental in _rentals.Where(r => r.Value.Id == id).Select(r => r.Value))
-            {
-                rental.SetUnit(vacationRental.Units);
-                rental.SetPreprationTimeInDays(vacationRental.PreparationTimeInDays);
-            }
+            _rentalServices.Update(id, vacationRental);
 
             return NoContent();
         }
-
 
         [HttpGet]
         [Route("calendar")]
@@ -63,19 +61,10 @@ namespace VacationRental.Api.Controllers
                 return BadRequest("Nights must be positive");
             if (!_rentals.ContainsKey(rentalId))
                 return NotFound();
-
-            var result = Calendar.Create(rentalId);
-            var prepartionTimes = _rentals.Where(r => r.Value.Id == rentalId).Select(r => r.Value.PreprationTimeInDays);
-            for (var night = 0; night < nights; night++)
-            {
-                var date = CalendarDate.Create(start, night);
-
-                date.AddCalendarBookingWithPreparationDate(rentalId, _bookings.Values, prepartionTimes);
-
-                result.Dates.Add(date);
-            }
+            
+            var result = _calendarService.GetWithPreparationTime(rentalId, start, nights);
 
             return Ok(_mapper.Map<CalendarDto>(result));
-        }
+        }    
     }
 }

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Swagger;
 using VacationRental.Api.Middlewares;
 using VacationRental.Api.Models;
+using VacationRental.Api.Services;
 using VacationRental.Domain;
 using VacationRental.Domain.ValueObject;
 
@@ -28,7 +29,6 @@ namespace VacationRental.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddHttpCacheHeaders((expirationModelOptions) =>
             {
                 expirationModelOptions.MaxAge = 60;
@@ -47,6 +47,9 @@ namespace VacationRental.Api
 
             services.AddSingleton<IDictionary<int, Rental>>(new Dictionary<int, Rental>());
             services.AddSingleton<IDictionary<int, Booking>>(new Dictionary<int, Booking>());
+            services.AddSingleton<IBookingServices, BookingServices>();
+            services.AddSingleton<ICalendarServices, CalendarServices>();
+            services.AddSingleton<IRentalServices, RentalServices>();
 
             var mappingConfig = new MapperConfiguration(mc =>
             {
@@ -92,7 +95,7 @@ namespace VacationRental.Api
 
             app.UseResponseCaching();
 
-            app.UseMiddleware<ExceptionMiddleware>();            
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseRouting();
 

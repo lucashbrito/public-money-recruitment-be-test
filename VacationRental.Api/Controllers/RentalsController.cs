@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using VacationRental.Api.Models;
+using VacationRental.Api.Services;
 using VacationRental.Domain;
 
 namespace VacationRental.Api.Controllers
@@ -13,10 +14,12 @@ namespace VacationRental.Api.Controllers
     {
         private readonly IDictionary<int, Rental> _rentals;
         private readonly IMapper _mapper;
-        public RentalsController(IDictionary<int, Rental> rentals, IMapper mapper)
+        private readonly IRentalServices _rentalServices;
+        public RentalsController(IDictionary<int, Rental> rentals, IMapper mapper, IRentalServices rentalServices)
         {
             _rentals = rentals;
             _mapper = mapper; ;
+            _rentalServices = rentalServices;
         }
 
         [HttpGet]

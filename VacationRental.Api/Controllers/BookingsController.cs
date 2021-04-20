@@ -4,6 +4,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using VacationRental.Api.Models;
 using VacationRental.Domain;
+using VacationRental.Api.Services;
 
 namespace VacationRental.Api.Controllers
 {
@@ -14,15 +15,18 @@ namespace VacationRental.Api.Controllers
         private readonly IDictionary<int, Rental> _rentals;
         private readonly IDictionary<int, Booking> _bookings;
         private readonly IMapper _mapper;
+        private readonly IBookingServices _bookService;
 
         public BookingsController(
             IDictionary<int, Rental> rentals,
             IDictionary<int, Booking> bookings,
+            IBookingServices bookingService,
             IMapper mapper)
         {
             _rentals = rentals;
             _bookings = bookings;
             _mapper = mapper;
+            _bookService = bookingService;
         }
 
         [HttpGet]
@@ -40,30 +44,11 @@ namespace VacationRental.Api.Controllers
         {
             if (newBooking.Nights <= 0)
                 return BadRequest("Nigts must be positive");
+
             if (!_rentals.ContainsKey(newBooking.RentalId))
-                return NotFound();            
+                return NotFound();
 
-            var reservationForThatTime = 0;
-            foreach (var booking in _bookings.Values)
-            {
-                if (booking.IsRentalEqual(newBooking.RentalId)
-                    && (booking.IsNewStartDayAfterPrepartionTime(newBooking.Start.Date, _rentals[booking.RentalId].PreprationTimeInDays)
-                        && booking.IsEndDayGreaterThanNewStartDay(newBooking.Start.Date))
-
-                    || (booking.IsNewEndDayGreaterThanStartDay(newBooking.Start, newBooking.Nights, _rentals[booking.RentalId].PreprationTimeInDays)
-                        && booking.IsEndDayGreatOrEqualNewEndDay(newBooking.Start, newBooking.Nights))
-
-                    || (booking.IsStartDayGreaterThanNewStartDay(newBooking.Start, _rentals[booking.RentalId].PreprationTimeInDays)
-                        && booking.IsNewEndDayGreaterThanEndDay(newBooking.Start, newBooking.Nights)))
-                {
-                    reservationForThatTime++;
-                }
-            }
-            _rentals[newBooking.RentalId].IsRentalAvailable(reservationForThatTime);
-
-            var key = new ResourceIdViewModel { Id = _bookings.Keys.Count + 1 };
-
-            _bookings.Add(key.Id, Booking.Create(key.Id, newBooking.RentalId, newBooking.Start.Date, newBooking.Nights));
+            var key = _bookService.AddNewBooking(newBooking);
 
             return Ok(key);
         }
