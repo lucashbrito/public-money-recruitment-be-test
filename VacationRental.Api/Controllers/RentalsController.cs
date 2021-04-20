@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using VacationRental.Api.Models;
+using VacationRental.Domain;
 
 namespace VacationRental.Api.Controllers
 {
@@ -9,35 +11,32 @@ namespace VacationRental.Api.Controllers
     [ApiController]
     public class RentalsController : ControllerBase
     {
-        private readonly IDictionary<int, RentalViewModel> _rentals;
-
-        public RentalsController(IDictionary<int, RentalViewModel> rentals)
+        private readonly IDictionary<int, Rental> _rentals;
+        private readonly IMapper _mapper;
+        public RentalsController(IDictionary<int, Rental> rentals, IMapper mapper)
         {
             _rentals = rentals;
+            _mapper = mapper; ;
         }
 
         [HttpGet]
         [Route("{rentalId:int}")]
-        public RentalViewModel Get(int rentalId)
+        public ActionResult<RentalDto> Get(int rentalId)
         {
             if (!_rentals.ContainsKey(rentalId))
-                throw new ApplicationException("Rental not found");
+                return NotFound();
 
-            return _rentals[rentalId];
+            return Ok(_mapper.Map<RentalDto>(_rentals[rentalId]));
         }
 
         [HttpPost]
-        public ResourceIdViewModel Post(RentalBindingModel model)
+        public ActionResult<ResourceIdViewModel> Post(RentalBindingModel model)
         {
             var key = new ResourceIdViewModel { Id = _rentals.Keys.Count + 1 };
 
-            _rentals.Add(key.Id, new RentalViewModel
-            {
-                Id = key.Id,
-                Units = model.Units
-            });
+            _rentals.Add(key.Id, Rental.Create(key.Id, model.Units));
 
-            return key;
+            return Ok(key);
         }
     }
 }
